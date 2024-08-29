@@ -1,3 +1,4 @@
+import { CreditCardEntity } from 'src/credit-card/entities/credit-card.entity';
 import { ProfileEntity } from 'src/profile/entities/profile.entity';
 import {
   Entity,
@@ -6,8 +7,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
+
 
 @Entity('Users')
 export class UserEntity {
@@ -38,4 +41,7 @@ export class UserEntity {
   @ManyToOne(() => ProfileEntity, (profile) => profile.users)
   @JoinColumn({ name: 'user_profile' })
   profile: ProfileEntity;
+
+  @OneToMany(() => CreditCardEntity, (creditCard) => creditCard.user)
+  creditCards: CreditCardEntity[];
 }

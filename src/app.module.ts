@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import * as cors from 'cors';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/shared/guards/jwt-auth.guard';
+import { CreditCardModule } from './credit-card/credit-card.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtAuthGuard } from './auth/shared/guards/jwt-auth.guard';
     UsersModule,
     ProfileModule,
     AuthModule,
+    CreditCardModule,
   ],
   controllers: [],
   providers: [
