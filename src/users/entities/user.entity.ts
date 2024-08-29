@@ -1,5 +1,6 @@
 import { CreditCardEntity } from 'src/credit-card/entities/credit-card.entity';
 import { ProfileEntity } from 'src/profile/entities/profile.entity';
+import { ThirdPartyEntity } from 'src/third-party/entities/third-party.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -44,4 +45,7 @@ export class UserEntity {
 
   @OneToMany(() => CreditCardEntity, (creditCard) => creditCard.user)
   creditCards: CreditCardEntity[];
+
+  @OneToMany(() => ThirdPartyEntity, (thirdParty) => thirdParty.user)
+  thirdParties: ThirdPartyEntity[];
 }

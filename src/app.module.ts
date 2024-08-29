@@ -9,6 +9,9 @@ import * as cors from 'cors';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/shared/guards/jwt-auth.guard';
 import { CreditCardModule } from './credit-card/credit-card.module';
+import { CategoryModule } from './category/category.module';
+import { ExpenseModule } from './expense/expense.module';
+import { ThirdPartyModule } from './third-party/third-party.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { CreditCardModule } from './credit-card/credit-card.module';
     ProfileModule,
     AuthModule,
     CreditCardModule,
+    CategoryModule,
+    ExpenseModule,
+    ThirdPartyModule,
   ],
   controllers: [],
   providers: [
