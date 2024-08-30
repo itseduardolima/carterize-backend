@@ -28,7 +28,7 @@ export class CreditCardEntity {
   @Column()
   credit_limit: number;
 
-  @Column({ name: 'available_limit', type: 'decimal', precision: 10, scale: 2 })
+  @Column({ default: 0 })
   available_limit: number;
 
   @ManyToOne(() => UserEntity, (user) => user.creditCards)

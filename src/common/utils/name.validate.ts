@@ -40,11 +40,7 @@ export class NameValidate {
         'O nome do usuario não pode conter números!!',
       );
     }
-    if (this.validate(this.NO_ACENTUATION, currentName)) {
-      throw new BadRequestException(
-        'O nome do usuario não pode conter acentuação!!',
-      );
-    }
+    
     const treatment = name.split(' ');
     let standard_name = '';
     treatment.forEach((name) => {

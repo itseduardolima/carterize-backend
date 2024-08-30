@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateThirdPartyDto } from './dto/create-third-party.dto';
 import { ThirdPartyEntity } from './entities/third-party.entity';
+import { NameValidate } from 'src/common/utils/name.validate';
 
 @Injectable()
 export class ThirdPartyService {
@@ -13,6 +14,8 @@ export class ThirdPartyService {
 
   async create(createThirdPartyDto: CreateThirdPartyDto): Promise<ThirdPartyEntity> {
     const thirdParty = this.thirdPartyRepository.create(createThirdPartyDto);
+
+    NameValidate.getInstance().getValidName(createThirdPartyDto.third_party_name);
     return this.thirdPartyRepository.save(thirdParty);
   }
 
