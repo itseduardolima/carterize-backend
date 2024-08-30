@@ -103,3 +103,8 @@ JWT_REFRESH_TOKEN_EXPIRES_IN=
 npm run start:dev
 ```
 
+5. Abra a documentação no navegador
+
+```bash
+http://localhost:5000/swagger
+```
