@@ -98,6 +98,71 @@ export class ExpenseService {
     return expense;
   }
 
+  async findExpensesByFilters(
+    userId: string,
+    thirdPartyId?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<{ expenses: ExpenseEntity[], totalAmount: number }> {
+    const query = this.expenseRepository.createQueryBuilder('expense')
+      .leftJoinAndSelect('expense.credit_card', 'credit_card')
+      .leftJoinAndSelect('expense.category', 'category')
+      .leftJoinAndSelect('expense.third_party', 'third_party')
+      .where('credit_card.user_id = :userId', { userId });
+
+    if (thirdPartyId) {
+      query.andWhere('expense.third_party_id = :thirdPartyId', { thirdPartyId });
+    } else {
+      query.andWhere('expense.third_party_id IS NULL');
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('expense.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    const expenses = await query.getMany();
+    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+    return { expenses, totalAmount };
+  }
+
+  async findExpensesForCurrentMonth(
+    userId: string,
+    thirdPartyId?: string,
+  ): Promise<{ expenses: ExpenseEntity[], totalAmount: number }> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    return this.findExpensesByFilters(userId, thirdPartyId, startOfMonth, endOfMonth);
+  }
+
+  async findExpensesForLastMonth(
+    userId: string,
+    thirdPartyId?: string,
+  ): Promise<{ expenses: ExpenseEntity[], totalAmount: number }> {
+    const now = new Date();
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    return this.findExpensesByFilters(userId, thirdPartyId, startOfLastMonth, endOfLastMonth);
+  }
+
+  async findExpensesByMonth(
+    userId: string,
+    month: number,
+    year: number,
+    thirdPartyId?: string,
+  ): Promise<{ expenses: ExpenseEntity[], totalAmount: number }> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    return this.findExpensesByFilters(userId, thirdPartyId, startDate, endDate);
+  }
+
   async update(
     expense_id: string,
     updateExpenseDto: UpdateExpenseDto,

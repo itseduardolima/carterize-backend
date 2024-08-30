@@ -25,7 +25,7 @@ export class ThirdPartyController {
   }
 
   @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ALL))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   async findAll() {
     return this.thirdPartyService.findAll();
   }

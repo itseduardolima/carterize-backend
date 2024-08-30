@@ -14,17 +14,14 @@ export class ExpenseEntity {
   @Column({ name: 'is_third_party' })
   is_third_party: boolean;
 
-  // Relacionamento com o cartão de crédito
   @ManyToOne(() => CreditCardEntity, (creditCard) => creditCard.expenses)
   @JoinColumn({ name: 'credit_card_id' })
   credit_card: CreditCardEntity;
 
-  // Relacionamento com a categoria
   @ManyToOne(() => CategoryEntity, (category) => category.expenses)
   @JoinColumn({ name: 'category_id' })
   category: CategoryEntity;
 
-  // Relacionamento com o terceiro (pode ser nulo)
   @ManyToOne(() => ThirdPartyEntity, (thirdParty) => thirdParty.expenses, { nullable: true })
   @JoinColumn({ name: 'third_party_id' })
   third_party: ThirdPartyEntity;
