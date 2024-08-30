@@ -1,14 +1,14 @@
-import { ExpenseEntity } from 'src/expense/entities/expense.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { ExpenseEntity } from 'src/expense/entities/expense.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   OneToMany,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn
 } from 'typeorm';
 
 @Entity('CreditCard')
@@ -27,6 +27,9 @@ export class CreditCardEntity {
 
   @Column()
   credit_limit: number;
+
+  @Column({ name: 'available_limit', type: 'decimal', precision: 10, scale: 2 })
+  available_limit: number;
 
   @ManyToOne(() => UserEntity, (user) => user.creditCards)
   @JoinColumn({ name: 'user_id' })

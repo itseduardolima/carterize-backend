@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExpenseEntity } from './entities/expense.entity';
@@ -25,28 +29,48 @@ export class ExpenseService {
   ) {}
 
   async create(createExpenseDto: CreateExpenseDto): Promise<ExpenseEntity> {
-    const { category_id, credit_card_id, third_party_id, ...expenseData } = createExpenseDto;
+    const {
+      category_id,
+      credit_card_id,
+      third_party_id,
+      amount,
+      ...expenseData
+    } = createExpenseDto;
 
-    const category = await this.categoryRepository.findOne({ where: { category_id } });
+    const category = await this.categoryRepository.findOne({
+      where: { category_id },
+    });
     if (!category) {
       throw new NotFoundException('Category not found');
     }
 
-    const creditCard = await this.creditCardRepository.findOne({ where: { card_id: credit_card_id } });
+    const creditCard = await this.creditCardRepository.findOne({
+      where: { card_id: credit_card_id },
+    });
     if (!creditCard) {
       throw new NotFoundException('Credit Card not found');
     }
 
-    const thirdParty = third_party_id 
-      ? await this.thirdPartyRepository.findOne({ where: { third_party_id } }) 
+    const thirdParty = third_party_id
+      ? await this.thirdPartyRepository.findOne({ where: { third_party_id } })
       : null;
 
     if (third_party_id && !thirdParty) {
       throw new NotFoundException('Third Party not found');
     }
 
+    if (creditCard.available_limit < amount) {
+      throw new BadRequestException(
+        'Limite insuficiente no cartão de crédito',
+      );
+    }
+
+    creditCard.available_limit -= amount;
+    await this.creditCardRepository.save(creditCard);
+
     const expense = this.expenseRepository.create({
       ...expenseData,
+      amount,
       category,
       credit_card: creditCard,
       third_party: thirdParty,
@@ -74,13 +98,24 @@ export class ExpenseService {
     return expense;
   }
 
-  async update(expense_id: string, updateExpenseDto: UpdateExpenseDto): Promise<ExpenseEntity> {
-    const { category_id, credit_card_id, third_party_id, ...expenseData } = updateExpenseDto;
+  async update(
+    expense_id: string,
+    updateExpenseDto: UpdateExpenseDto,
+  ): Promise<ExpenseEntity> {
+    const {
+      category_id,
+      credit_card_id,
+      third_party_id,
+      amount,
+      ...expenseData
+    } = updateExpenseDto;
 
     const expense = await this.findOne(expense_id);
 
     if (category_id) {
-      const category = await this.categoryRepository.findOne({ where: { category_id } });
+      const category = await this.categoryRepository.findOne({
+        where: { category_id },
+      });
       if (!category) {
         throw new NotFoundException('Category not found');
       }
@@ -88,7 +123,9 @@ export class ExpenseService {
     }
 
     if (credit_card_id) {
-      const creditCard = await this.creditCardRepository.findOne({ where: { card_id: credit_card_id } });
+      const creditCard = await this.creditCardRepository.findOne({
+        where: { card_id: credit_card_id },
+      });
       if (!creditCard) {
         throw new NotFoundException('Credit Card not found');
       }
@@ -96,7 +133,9 @@ export class ExpenseService {
     }
 
     if (third_party_id) {
-      const thirdParty = await this.thirdPartyRepository.findOne({ where: { third_party_id } });
+      const thirdParty = await this.thirdPartyRepository.findOne({
+        where: { third_party_id },
+      });
       if (!thirdParty) {
         throw new NotFoundException('Third Party not found');
       }
@@ -110,6 +149,12 @@ export class ExpenseService {
 
   async remove(expense_id: string): Promise<void> {
     const expense = await this.findOne(expense_id);
+
+    if (expense.credit_card) {
+      expense.credit_card.available_limit += expense.amount;
+      await this.creditCardRepository.save(expense.credit_card);
+    }
+
     await this.expenseRepository.remove(expense);
   }
 }
