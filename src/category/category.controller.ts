@@ -18,7 +18,7 @@ export class CategoryController {
   }
 
   @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(PermissionGuard(AccessProfile.CLIENT))
   findAll() {
     return this.categoryService.findAll();
   }
