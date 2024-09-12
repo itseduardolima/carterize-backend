@@ -76,6 +76,37 @@ export class ExpenseController {
     return { message: 'Expense successfully deleted' };
   }
 
+  @Get('filter/by-card')
+  @ApiOperation({ summary: 'Get expenses by specific credit card' })
+  @ApiResponse({ status: 200, description: 'List of expenses for the specific credit card.' })
+  @ApiQuery({ name: 'userId', required: true, type: String })
+  @ApiQuery({ name: 'creditCardId', required: true, type: String })
+  @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
+  @ApiQuery({ 
+    name: 'startDate', 
+    required: false, 
+    type: Date, 
+    example: '2024-08-01',
+    description: 'Data de início no formato yyyy-MM-dd',
+  })
+  @ApiQuery({ 
+    name: 'endDate', 
+    required: false, 
+    type: Date, 
+    example: '2024-08-12',
+    description: 'Data de término no formato yyyy-MM-dd',
+  })
+  @UseGuards(PermissionGuard(AccessProfile.CLIENT))
+  async findExpensesByCreditCard(
+    @Query('userId') userId: string,
+    @Query('creditCardId') creditCardId: string,
+    @Query('thirdPartyId') thirdPartyId?: string,
+    @Query('startDate') startDate?: Date,
+    @Query('endDate') endDate?: Date,
+  ) {
+    return this.expenseService.findExpensesByFilters(userId, thirdPartyId, startDate, endDate, creditCardId);
+  }
+
   @Get('filter/current-month')
   @ApiOperation({ summary: 'Get expenses for the current month' })
   @ApiResponse({ status: 200, description: 'List of expenses for the current month.' })
@@ -132,8 +163,20 @@ export class ExpenseController {
   @ApiResponse({ status: 200, description: 'Filtered list of expenses.' })
   @ApiQuery({ name: 'userId', required: true, type: String })
   @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
-  @ApiQuery({ name: 'startDate', required: false, type: Date })
-  @ApiQuery({ name: 'endDate', required: false, type: Date })
+  @ApiQuery({ 
+    name: 'startDate', 
+    required: false, 
+    type: Date, 
+    example: '2024-08-01', 
+    description: 'Data de início no formato yyyy-MM-dd',
+  })
+  @ApiQuery({ 
+    name: 'endDate', 
+    required: false, 
+    type: Date, 
+    example: '2024-08-12', 
+    description: 'Data de término no formato yyyy-MM-dd',
+  })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
   async findExpensesByFilters(
     @Query('userId') userId: string,
