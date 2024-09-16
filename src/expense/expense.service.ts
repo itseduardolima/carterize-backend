@@ -34,6 +34,7 @@ export class ExpenseService {
       credit_card_id,
       third_party_id,
       amount,
+      status,
       ...expenseData
     } = createExpenseDto;
 
@@ -69,6 +70,7 @@ export class ExpenseService {
     const expense = this.expenseRepository.create({
       ...expenseData,
       amount,
+      status,
       category,
       credit_card: creditCard,
       third_party: thirdParty,
@@ -110,18 +112,12 @@ export class ExpenseService {
       .leftJoinAndSelect('expense.third_party', 'third_party')
       .where('credit_card.user_id = :userId', { userId });
 
-    if (creditCardId) {
-      query.andWhere('expense.credit_card_id = :creditCardId', {
-        creditCardId,
-      });
-    }
+    query.orWhere('expense.credit_card_id = :creditCardId', { creditCardId });
 
     if (thirdPartyId) {
       query.andWhere('expense.third_party_id = :thirdPartyId', {
         thirdPartyId,
       });
-    } else {
-      query.andWhere('expense.third_party_id IS NULL');
     }
 
     if (startDate && endDate) {
@@ -193,6 +189,7 @@ export class ExpenseService {
       credit_card_id,
       third_party_id,
       amount,
+      status, // Inclua o campo status
       ...expenseData
     } = updateExpenseDto;
 
@@ -226,6 +223,10 @@ export class ExpenseService {
         throw new NotFoundException('Third Party not found');
       }
       expense.third_party = thirdParty;
+    }
+
+    if (status !== undefined) {
+      expense.status = status;
     }
 
     Object.assign(expense, expenseData);

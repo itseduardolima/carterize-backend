@@ -13,7 +13,13 @@ import {
 import { ExpenseService } from './expense.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
 import AccessProfile from 'src/auth/enums/permission.type';
 
@@ -26,8 +32,14 @@ export class ExpenseController {
   @Post()
   @ApiOperation({ summary: 'Create a new expense' })
   @ApiResponse({ status: 201, description: 'Expense successfully created.' })
-  @ApiResponse({ status: 404, description: 'Category, Credit Card, or Third Party not found.' })
-  @ApiResponse({ status: 400, description: 'Insufficient credit limit on credit card.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Category, Credit Card, or Third Party not found.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Insufficient credit limit on credit card.',
+  })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
   async create(@Body() createExpenseDto: CreateExpenseDto) {
     return this.expenseService.create(createExpenseDto);
@@ -57,7 +69,10 @@ export class ExpenseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update an expense by ID' })
   @ApiResponse({ status: 200, description: 'Expense successfully updated.' })
-  @ApiResponse({ status: 404, description: 'Expense, Category, Credit Card, or Third Party not found.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Expense, Category, Credit Card, or Third Party not found.',
+  })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
   async update(
     @Param('id') id: string,
@@ -76,23 +91,73 @@ export class ExpenseController {
     return { message: 'Expense successfully deleted' };
   }
 
+  @Get('filter/by-user')
+  @ApiOperation({
+    summary: 'Get expenses by user and month, including third parties',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'List of expenses for the specified user and month, including third parties.',
+  })
+  @ApiQuery({
+    name: 'userId',
+    required: true,
+    type: String,
+    description: 'ID of the user',
+  })
+  @ApiQuery({
+    name: 'month',
+    required: true,
+    type: Number,
+    description: 'Month (1-12)',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: true,
+    type: Number,
+    description: 'Year (e.g., 2024)',
+  })
+  @UseGuards(PermissionGuard(AccessProfile.CLIENT))
+  async findExpensesByUserAndMonth(
+    @Query('userId') userId: string,
+    @Query('month') month: number,
+    @Query('year') year: number,
+  ) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const { expenses, totalAmount } =
+      await this.expenseService.findExpensesByFilters(
+        userId,
+        undefined,
+        startDate,
+        endDate,
+      );
+
+    return { expenses, totalAmount };
+  }
+
   @Get('filter/by-card')
   @ApiOperation({ summary: 'Get expenses by specific credit card' })
-  @ApiResponse({ status: 200, description: 'List of expenses for the specific credit card.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of expenses for the specific credit card.',
+  })
   @ApiQuery({ name: 'userId', required: true, type: String })
   @ApiQuery({ name: 'creditCardId', required: true, type: String })
   @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
-  @ApiQuery({ 
-    name: 'startDate', 
-    required: false, 
-    type: Date, 
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: Date,
     example: '2024-08-01',
     description: 'Data de início no formato yyyy-MM-dd',
   })
-  @ApiQuery({ 
-    name: 'endDate', 
-    required: false, 
-    type: Date, 
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: Date,
     example: '2024-08-12',
     description: 'Data de término no formato yyyy-MM-dd',
   })
@@ -104,12 +169,21 @@ export class ExpenseController {
     @Query('startDate') startDate?: Date,
     @Query('endDate') endDate?: Date,
   ) {
-    return this.expenseService.findExpensesByFilters(userId, thirdPartyId, startDate, endDate, creditCardId);
+    return this.expenseService.findExpensesByFilters(
+      userId,
+      thirdPartyId,
+      startDate,
+      endDate,
+      creditCardId,
+    );
   }
 
   @Get('filter/current-month')
   @ApiOperation({ summary: 'Get expenses for the current month' })
-  @ApiResponse({ status: 200, description: 'List of expenses for the current month.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of expenses for the current month.',
+  })
   @ApiQuery({ name: 'userId', required: true, type: String })
   @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
@@ -121,23 +195,37 @@ export class ExpenseController {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    const { expenses, totalAmount } = await this.expenseService.findExpensesByFilters(
-      userId, 
-      thirdPartyId, 
-      startOfMonth, 
-      endOfMonth
-    );
+    const { expenses, totalAmount } =
+      await this.expenseService.findExpensesByFilters(
+        userId,
+        thirdPartyId,
+        startOfMonth,
+        endOfMonth,
+      );
 
     return { expenses, totalAmount };
   }
 
   @Get('filter/by-month')
   @ApiOperation({ summary: 'Get expenses by specific month and year' })
-  @ApiResponse({ status: 200, description: 'List of expenses for the specific month and year.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of expenses for the specific month and year.',
+  })
   @ApiQuery({ name: 'userId', required: true, type: String })
   @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
-  @ApiQuery({ name: 'month', required: true, type: Number, description: 'Month (1-12)' })
-  @ApiQuery({ name: 'year', required: true, type: Number, description: 'Year (e.g., 2024)' })
+  @ApiQuery({
+    name: 'month',
+    required: true,
+    type: Number,
+    description: 'Month (1-12)',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: true,
+    type: Number,
+    description: 'Year (e.g., 2024)',
+  })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
   async findExpensesByMonth(
     @Query('userId') userId: string,
@@ -148,12 +236,13 @@ export class ExpenseController {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-    const { expenses, totalAmount } = await this.expenseService.findExpensesByFilters(
-      userId, 
-      thirdPartyId, 
-      startDate, 
-      endDate
-    );
+    const { expenses, totalAmount } =
+      await this.expenseService.findExpensesByFilters(
+        userId,
+        thirdPartyId,
+        startDate,
+        endDate,
+      );
 
     return { expenses, totalAmount };
   }
@@ -163,18 +252,18 @@ export class ExpenseController {
   @ApiResponse({ status: 200, description: 'Filtered list of expenses.' })
   @ApiQuery({ name: 'userId', required: true, type: String })
   @ApiQuery({ name: 'thirdPartyId', required: false, type: String })
-  @ApiQuery({ 
-    name: 'startDate', 
-    required: false, 
-    type: Date, 
-    example: '2024-08-01', 
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: Date,
+    example: '2024-08-01',
     description: 'Data de início no formato yyyy-MM-dd',
   })
-  @ApiQuery({ 
-    name: 'endDate', 
-    required: false, 
-    type: Date, 
-    example: '2024-08-12', 
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: Date,
+    example: '2024-08-12',
     description: 'Data de término no formato yyyy-MM-dd',
   })
   @UseGuards(PermissionGuard(AccessProfile.CLIENT))
@@ -184,6 +273,11 @@ export class ExpenseController {
     @Query('startDate') startDate?: Date,
     @Query('endDate') endDate?: Date,
   ) {
-    return this.expenseService.findExpensesByFilters(userId, thirdPartyId, startDate, endDate);
+    return this.expenseService.findExpensesByFilters(
+      userId,
+      thirdPartyId,
+      startDate,
+      endDate,
+    );
   }
 }
