@@ -1,7 +1,7 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ExpenseEntity } from '../entities/expense.entity';
 
-export class CreateExpenseDto extends OmitType(ExpenseEntity, ['expense_id', 'createdAt']) {
+export class CreateExpenseDto extends OmitType(ExpenseEntity, ['expense_id']) {
   @ApiProperty()
   amount: number;
 
@@ -16,4 +16,10 @@ export class CreateExpenseDto extends OmitType(ExpenseEntity, ['expense_id', 'cr
 
   @ApiProperty()
   is_third_party: boolean;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty({ description: 'Status da despesa: pago ou não pago.', default: false })
+  status: boolean;
 }
